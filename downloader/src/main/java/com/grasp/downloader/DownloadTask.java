@@ -26,6 +26,8 @@ public class DownloadTask {
 
     private String ETag;
 
+    // TODO ADD TYPE
+
     public int getId() {
         return id;
     }

@@ -4,6 +4,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import android.content.Context;
 
+import com.grasp.downloader.db.DownloaderDatabase;
+
 /**
  * Created by qzz on 2017/4/19.
  */
@@ -30,8 +32,14 @@ public class Downloader {
     }
 
     public void addDownloadTask(DownloadTask downloadTask) {
-        WorkRunnable work = new WorkRunnable(DownloadHelper.getDownloadTask(downloadTask));
-        DownloadThreadPool.getsInstance().execute(work);
+//        WorkRunnable work = new WorkRunnable(DownloadHelper.getDownloadTask(downloadTask));
+//        DownloadThreadPool.getsInstance().execute(work);
+        //DownloadHelper.getDownloadTask(downloadTask);
+        DownloaderDatabase.getsInstance(context).insertTask();
+        downloadTask.setId(mId.getAndIncrement());
+        if (downloadTask.getListener() == null) {
+            downloadTask.setListener(new DefaultDownloadListener(context));
+        }
     }
 
 
