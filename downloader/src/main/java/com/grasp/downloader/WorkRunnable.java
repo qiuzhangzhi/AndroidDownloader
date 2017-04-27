@@ -8,7 +8,10 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import android.content.Context;
 import android.util.Log;
+
+import com.grasp.downloader.db.DownloaderDatabase;
 
 /**
  * Created by qzz on 2017/4/19.
@@ -38,10 +41,16 @@ public class WorkRunnable implements Runnable{
 
     private FileOutputStream outputStream;
 
-    public WorkRunnable(DownloadTask task) {
+    private Context context;
+
+    public WorkRunnable(Context context, DownloadTask task) {
         this.task = task;
-        mListener = task.getListener();
         buffer = new byte[BUFFER_SIZE];
+        this.context = context;
+        if (task.getListener() == null) {
+            task.setListener(new DefaultDownloadListener(context));
+        }
+        mListener = task.getListener();
     }
 
     @Override
@@ -49,16 +58,17 @@ public class WorkRunnable implements Runnable{
         //TODO wifi chunk 重试次数 相同文件名称重置 重定向 后缀
         try {
             mListener.onDownloadStart(task);
-
             long bytesSoFar = 0;
-            File file = new File(FileUtils.getAddress(task.getName()));
-            file.delete();
-            if (file.exists()) {
-                long fileLength = file.length();
-                if (fileLength == 0) {
-                    file.delete();
+            if (task.getSaveAddress() != null) {
+                File file = new File(task.getSaveAddress());
+                file.delete();
+                if (file.exists()) {
+                    long fileLength = file.length();
+                    if (fileLength == 0) {
+                        file.delete();
+                    }
+                    bytesSoFar = fileLength;
                 }
-                bytesSoFar = fileLength;
             }
 
             URL url = new URL(task.getUrl());
@@ -74,7 +84,7 @@ public class WorkRunnable implements Runnable{
             Log.d(TAG, "ResponseCode:" + connection.getResponseCode());
 
             if (isResponseSuccess(connection.getResponseCode())) {
-                int fileSize = task.getSize();
+                long fileSize = task.getSize();
                 String transferEncoding = connection.getHeaderField("Transfer-Encoding");
 
                 if (fileSize == FILE_SIZE_NOT_ASSIGN) {
@@ -94,8 +104,13 @@ public class WorkRunnable implements Runnable{
 
                 Log.d(TAG,"fileSize:" + fileSize);
 
-                InputStream inputStream = connection.getInputStream();
-                FileOutputStream outputStream = new FileOutputStream(file,true);
+                if (task.getSaveAddress() == null) {
+                    String mimeType = connection.getHeaderField("Content-Type");
+                    task.setSaveAddress(DownloadHelper.getUniqueFilename(task, mimeType));
+                }
+
+                inputStream = connection.getInputStream();
+                outputStream = new FileOutputStream(task.getSaveAddress(),true);
 
                 int len = 0;
                 while ((len = inputStream.read(buffer)) > 0) {
@@ -122,6 +137,7 @@ public class WorkRunnable implements Runnable{
     private void processIncrement(int len) {
         task.setDownloaded(len);
         mListener.onDownloadProgress(task);
+        DownloaderDatabase.getsInstance(context).updateTask(task);
     }
 
     private void release() {

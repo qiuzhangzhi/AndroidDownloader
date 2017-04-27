@@ -1,5 +1,7 @@
 package com.grasp.downloader;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import android.content.Context;
@@ -20,6 +22,8 @@ public class Downloader {
 
     private Context context;
 
+    private AtomicBoolean isStarted;
+
     public static Downloader getsInstance(Context context) {
         if (sInstance == null) {
             sInstance = new Downloader(context);
@@ -31,14 +35,25 @@ public class Downloader {
         this.context = context;
     }
 
-    public void addDownloadTask(DownloadTask downloadTask) {
-//        WorkRunnable work = new WorkRunnable(DownloadHelper.getDownloadTask(downloadTask));
-//        DownloadThreadPool.getsInstance().execute(work);
-        //DownloadHelper.getDownloadTask(downloadTask);
-        DownloaderDatabase.getsInstance(context).insertTask();
-        downloadTask.setId(mId.getAndIncrement());
-        if (downloadTask.getListener() == null) {
-            downloadTask.setListener(new DefaultDownloadListener(context));
+    public long addDownloadTask(DownloadTask downloadTask) {
+        launchDownloader();
+
+        downloadTask.setId(DownloaderDatabase.getsInstance(context).insertTask(downloadTask));
+        WorkRunnable work = new WorkRunnable(context, downloadTask);
+        DownloadThreadPool.getsInstance().execute(work);
+
+        return downloadTask.getId();
+    }
+
+    public void launchDownloader() {
+        if (isStarted.getAndSet(true)) {
+            return;
+        }
+
+        List<DownloadTask> tasks = DownloadTask.cursorToTasks(DownloaderDatabase.getsInstance(context).query());
+        for (DownloadTask task : tasks) {
+            WorkRunnable work = new WorkRunnable(context, task);
+            DownloadThreadPool.getsInstance().execute(work);
         }
     }
 

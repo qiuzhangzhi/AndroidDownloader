@@ -6,8 +6,8 @@ package com.grasp.downloader;
 
 public class FileUtils {
 
-    private final static String baseFolder = "/sdcard/downloader";
+
     public static String getAddress(String file){
-        return baseFolder +"/"+file;
+        return Constants.baseFolder +"/"+file;
     }
 }
