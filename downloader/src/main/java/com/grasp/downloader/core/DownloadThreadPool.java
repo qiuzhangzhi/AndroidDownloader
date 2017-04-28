@@ -1,4 +1,4 @@
-package com.grasp.downloader;
+package com.grasp.downloader.core;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;

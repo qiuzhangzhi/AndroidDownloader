@@ -1,4 +1,4 @@
-package com.grasp.downloader;
+package com.grasp.downloader.core;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.grasp.downloader.db.DBContract.*;
+import com.grasp.downloader.listener.DownloadListener;
+
 /**
  * Created by qzz on 2017/4/19.
  */

@@ -1,7 +1,10 @@
-package com.grasp.downloader;
+package com.grasp.downloader.util;
 
 import android.os.SystemClock;
 import android.webkit.MimeTypeMap;
+
+import com.grasp.downloader.core.Constants;
+import com.grasp.downloader.core.DownloadTask;
 
 import java.io.File;
 import java.util.Random;
@@ -45,7 +48,7 @@ public class DownloadHelper {
                 extension = str.substring(urlLastDot);
             }
         }
-        filename =FileUtils.getAddress(filename);
+        filename =getAddress(filename);
         String fullFilename = filename + extension;
         if (!new File(fullFilename).exists()) {
             return fullFilename;
@@ -53,7 +56,7 @@ public class DownloadHelper {
             int sequence = 1;
             for (int magnitude = 1; magnitude < 1000000000; magnitude *= 10) {
                 for (int iteration = 0; iteration < 9; ++iteration) {
-                    fullFilename = filename + sequence + extension;
+                    fullFilename = filename + "-" + sequence + extension;
                     if (!new File(fullFilename).exists()) {
                         return fullFilename;
                     }
@@ -102,5 +105,9 @@ public class DownloadHelper {
         }
 
         return extension;
+    }
+
+    public static String getAddress(String file){
+        return Constants.baseFolder +"/"+file;
     }
 }

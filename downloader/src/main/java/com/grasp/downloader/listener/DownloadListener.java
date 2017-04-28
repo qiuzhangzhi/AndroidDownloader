@@ -1,4 +1,6 @@
-package com.grasp.downloader;
+package com.grasp.downloader.listener;
+
+import com.grasp.downloader.core.DownloadTask;
 
 /**
  * Created by qzz on 2017/4/21.

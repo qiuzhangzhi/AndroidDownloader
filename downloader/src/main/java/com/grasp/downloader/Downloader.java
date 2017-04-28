@@ -1,11 +1,16 @@
 package com.grasp.downloader;
 
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import android.content.Context;
 
+import com.grasp.downloader.core.Constants;
+import com.grasp.downloader.core.DownloadTask;
+import com.grasp.downloader.core.DownloadThreadPool;
+import com.grasp.downloader.core.WorkRunnable;
 import com.grasp.downloader.db.DownloaderDatabase;
 
 /**
@@ -14,15 +19,13 @@ import com.grasp.downloader.db.DownloaderDatabase;
 
 public class Downloader {
 
-    private static final String TAG = "Downloader";
+    private static final String TAG = Constants.TAG_PREFIX + "Downloader";
 
     private static Downloader sInstance;
 
-    private AtomicInteger mId = new AtomicInteger(0);
-
     private Context context;
 
-    private AtomicBoolean isStarted;
+    private AtomicBoolean isStarted = new AtomicBoolean(false);
 
     public static Downloader getsInstance(Context context) {
         if (sInstance == null) {
@@ -49,7 +52,7 @@ public class Downloader {
         if (isStarted.getAndSet(true)) {
             return;
         }
-
+        init();
         List<DownloadTask> tasks = DownloadTask.cursorToTasks(DownloaderDatabase.getsInstance(context).query());
         for (DownloadTask task : tasks) {
             WorkRunnable work = new WorkRunnable(context, task);
@@ -57,5 +60,23 @@ public class Downloader {
         }
     }
 
+    private void init() {
+        File baseFolder = new File(Constants.baseFolder);
+        if (!baseFolder.exists()) {
+            baseFolder.mkdirs();
+        }
+    }
+
+    public boolean hasDownloadTask() {
+        try {
+            List<DownloadTask> tasks = DownloadTask.cursorToTasks(DownloaderDatabase.getsInstance(context).query());
+            if (tasks != null && tasks.size() > 0) {
+                return true;
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 
 }

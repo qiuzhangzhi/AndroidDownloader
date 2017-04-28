@@ -1,4 +1,4 @@
-package com.grasp.downloader;
+package com.grasp.downloader.core;
 
 
 import java.io.File;
@@ -11,7 +11,10 @@ import java.net.URL;
 import android.content.Context;
 import android.util.Log;
 
+import com.grasp.downloader.util.DownloadHelper;
 import com.grasp.downloader.db.DownloaderDatabase;
+import com.grasp.downloader.listener.DefaultDownloadListener;
+import com.grasp.downloader.listener.DownloadListener;
 
 /**
  * Created by qzz on 2017/4/19.
@@ -19,7 +22,7 @@ import com.grasp.downloader.db.DownloaderDatabase;
 
 public class WorkRunnable implements Runnable{
 
-    private final String TAG = "WorkRunnable";
+    private final String TAG = Constants.TAG_PREFIX + "WorkRunnable";
 
     private final int CONNECT_TIME_OUT = 10000;
 
@@ -27,7 +30,7 @@ public class WorkRunnable implements Runnable{
 
     private final int FILE_SIZE_CHUNKED = 0;
 
-    private final int BUFFER_SIZE = 1024;
+    private final int BUFFER_SIZE = 4 * 1024;
 
     private final DownloadTask task;
 
@@ -58,16 +61,17 @@ public class WorkRunnable implements Runnable{
         //TODO wifi chunk 重试次数 相同文件名称重置 重定向 后缀
         try {
             mListener.onDownloadStart(task);
+
             long bytesSoFar = 0;
             if (task.getSaveAddress() != null) {
                 File file = new File(task.getSaveAddress());
-                file.delete();
                 if (file.exists()) {
                     long fileLength = file.length();
                     if (fileLength == 0) {
                         file.delete();
                     }
                     bytesSoFar = fileLength;
+                    task.setDownloaded(fileLength);
                 }
             }
 
@@ -95,6 +99,7 @@ public class WorkRunnable implements Runnable{
                         fileSize = connection.getContentLength();
                     }
                     task.setSize(fileSize);
+                    DownloaderDatabase.getsInstance(context).updateTask(task);
                 }
 
                 if (fileSize == FILE_SIZE_NOT_ASSIGN) {
@@ -107,6 +112,7 @@ public class WorkRunnable implements Runnable{
                 if (task.getSaveAddress() == null) {
                     String mimeType = connection.getHeaderField("Content-Type");
                     task.setSaveAddress(DownloadHelper.getUniqueFilename(task, mimeType));
+                    DownloaderDatabase.getsInstance(context).updateTask(task);
                 }
 
                 inputStream = connection.getInputStream();
@@ -136,8 +142,9 @@ public class WorkRunnable implements Runnable{
 
     private void processIncrement(int len) {
         task.setDownloaded(len);
+        Log.d(TAG,"processIncrement len:" + len);
         mListener.onDownloadProgress(task);
-        DownloaderDatabase.getsInstance(context).updateTask(task);
+
     }
 
     private void release() {

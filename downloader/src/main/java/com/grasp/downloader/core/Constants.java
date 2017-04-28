@@ -1,11 +1,13 @@
-package com.grasp.downloader;
+package com.grasp.downloader.core;
 
 /**
  * Created by qzz on 2017/4/27.
  */
 
 public class Constants {
-    public final static String baseFolder = "/sdcard/downloader";
+    public final static String TAG_PREFIX = "download-";
+
+    public final static String baseFolder = "/sdcard/downloader/";
 
     /**
      * The default extension for html files if we can't get one at the HTTP level
