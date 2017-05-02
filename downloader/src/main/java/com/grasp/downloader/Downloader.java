@@ -40,11 +40,13 @@ public class Downloader {
 
     public long addDownloadTask(DownloadTask downloadTask) {
         launchDownloader();
-
-        downloadTask.setId(DownloaderDatabase.getsInstance(context).insertTask(downloadTask));
-        WorkRunnable work = new WorkRunnable(context, downloadTask);
-        DownloadThreadPool.getsInstance().execute(work);
-
+        try {
+            downloadTask.setId(DownloaderDatabase.getsInstance(context).insertTask(downloadTask));
+            WorkRunnable work = new WorkRunnable(context, downloadTask);
+            DownloadThreadPool.getsInstance().execute(work);
+        }catch (Throwable e) {
+            e.printStackTrace();
+        }
         return downloadTask.getId();
     }
 
@@ -52,11 +54,15 @@ public class Downloader {
         if (isStarted.getAndSet(true)) {
             return;
         }
-        init();
-        List<DownloadTask> tasks = DownloadTask.cursorToTasks(DownloaderDatabase.getsInstance(context).query());
-        for (DownloadTask task : tasks) {
-            WorkRunnable work = new WorkRunnable(context, task);
-            DownloadThreadPool.getsInstance().execute(work);
+        try {
+            init();
+            List<DownloadTask> tasks = DownloadTask.cursorToTasks(DownloaderDatabase.getsInstance(context).query());
+            for (DownloadTask task : tasks) {
+                WorkRunnable work = new WorkRunnable(context, task);
+                DownloadThreadPool.getsInstance().execute(work);
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
         }
     }
 

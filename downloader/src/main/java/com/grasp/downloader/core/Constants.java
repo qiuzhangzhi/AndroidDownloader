@@ -29,4 +29,10 @@ public class Constants {
      * filename from the sequence number
      */
     public static final String FILENAME_SEQUENCE_SEPARATOR = "-";
+
+    public static final int FILE_SIZE_NOT_ASSIGN = -1;
+
+    public static final int FILE_SIZE_CHUNKED = 0;
+
+    public static final int ANDROID_N = 24;
 }

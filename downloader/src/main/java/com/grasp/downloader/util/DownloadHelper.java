@@ -1,5 +1,8 @@
 package com.grasp.downloader.util;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.SystemClock;
 import android.webkit.MimeTypeMap;
 
@@ -109,5 +112,16 @@ public class DownloadHelper {
 
     public static String getAddress(String file){
         return Constants.baseFolder +"/"+file;
+    }
+
+
+    public static boolean isWifi(Context context) {
+        ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+        if (mWifi.isConnected()) {
+            return true;
+        }
+        return false;
     }
 }

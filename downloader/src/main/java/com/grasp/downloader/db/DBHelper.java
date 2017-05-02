@@ -20,17 +20,21 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE IF NOT EXISTS "+ DownloadEntry.TABLE_NAME + " ("
-                + DownloadEntry.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + DownloadEntry.COLUMN_NAME + " VARCHAR( 128 ) NOT NULL, "
-                + DownloadEntry.COLUMN_SIZE + " INTEGER, "
-                + DownloadEntry.COLUMN_DOWNLOADED + " INTEGER, "
-                + DownloadEntry.COLUMN_STATE + " INT( 3 ), "
-                + DownloadEntry.COLUMN_URL + " VARCHAR( 256 ), "
-                + DownloadEntry.COLUMN_PERCENT + " INT( 3 ), "
-                + DownloadEntry.COLUMN_SAVE_ADDRESS + " VARCHAR( 256 ),"
-                + DownloadEntry.COLUMN_ETAG + " VARCHAR( 32 )"
-                + " ); ");
+        try {
+            db.execSQL("CREATE TABLE IF NOT EXISTS "+ DownloadEntry.TABLE_NAME + " ("
+                    + DownloadEntry.COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + DownloadEntry.COLUMN_NAME + " VARCHAR( 128 ) NOT NULL, "
+                    + DownloadEntry.COLUMN_SIZE + " INTEGER, "
+                    + DownloadEntry.COLUMN_DOWNLOADED + " INTEGER, "
+                    + DownloadEntry.COLUMN_STATE + " INT( 3 ), "
+                    + DownloadEntry.COLUMN_URL + " VARCHAR( 256 ), "
+                    + DownloadEntry.COLUMN_PERCENT + " INT( 3 ), "
+                    + DownloadEntry.COLUMN_SAVE_ADDRESS + " VARCHAR( 256 ),"
+                    + DownloadEntry.COLUMN_ETAG + " VARCHAR( 32 )"
+                    + " ); ");
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

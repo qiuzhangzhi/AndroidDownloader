@@ -9,6 +9,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import com.grasp.downloader.util.DownloadHelper;
@@ -26,10 +27,6 @@ public class WorkRunnable implements Runnable{
 
     private final int CONNECT_TIME_OUT = 10000;
 
-    private final int FILE_SIZE_NOT_ASSIGN = -1;
-
-    private final int FILE_SIZE_CHUNKED = 0;
-
     private final int BUFFER_SIZE = 4 * 1024;
 
     private final DownloadTask task;
@@ -46,6 +43,8 @@ public class WorkRunnable implements Runnable{
 
     private Context context;
 
+    private long lastUpdateTime;
+
     public WorkRunnable(Context context, DownloadTask task) {
         this.task = task;
         buffer = new byte[BUFFER_SIZE];
@@ -60,6 +59,9 @@ public class WorkRunnable implements Runnable{
     public void run() {
         //TODO wifi chunk 重试次数 相同文件名称重置 重定向 后缀
         try {
+            if (!DownloadHelper.isWifi(context)){
+                return;
+            }
             mListener.onDownloadStart(task);
 
             long bytesSoFar = 0;
@@ -91,18 +93,22 @@ public class WorkRunnable implements Runnable{
                 long fileSize = task.getSize();
                 String transferEncoding = connection.getHeaderField("Transfer-Encoding");
 
-                if (fileSize == FILE_SIZE_NOT_ASSIGN) {
+                if (fileSize == Constants.FILE_SIZE_NOT_ASSIGN) {
                     if (transferEncoding != null && transferEncoding.equals("chunked")) {
-                        fileSize = FILE_SIZE_CHUNKED;
+                        fileSize = Constants.FILE_SIZE_CHUNKED;
                     } else {
-                        // 版本兼容getContentLengthLong
-                        fileSize = connection.getContentLength();
+                        if (Build.VERSION.SDK_INT >= Constants.ANDROID_N) {
+                            fileSize = connection.getContentLengthLong();
+                        } else {
+                            fileSize = connection.getContentLength();
+                        }
+
                     }
                     task.setSize(fileSize);
                     DownloaderDatabase.getsInstance(context).updateTask(task);
                 }
 
-                if (fileSize == FILE_SIZE_NOT_ASSIGN) {
+                if (fileSize == Constants.FILE_SIZE_NOT_ASSIGN) {
                     mListener.onDownloadFailed(task);
                     return;
                 }
@@ -143,7 +149,11 @@ public class WorkRunnable implements Runnable{
     private void processIncrement(int len) {
         task.setDownloaded(len);
         Log.d(TAG,"processIncrement len:" + len);
-        mListener.onDownloadProgress(task);
+        if (System.currentTimeMillis() - lastUpdateTime >= 1000) {
+            mListener.onDownloadProgress(task);
+            lastUpdateTime = System.currentTimeMillis();
+        }
+
 
     }
 
